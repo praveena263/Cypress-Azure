@@ -4,18 +4,43 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
-- Praveena/Created-azure-pipeline-yml
+  branches:
+    include:
+      - main  # Change this to the branch you want to trigger the pipeline
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 steps:
+# Step 1: Install Node.js
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.x'
+    versionSpec: '14.x'  # Updated to a more recent LTS version of Node.js
   displayName: 'Install Node.js'
 
+# Step 2: Install dependencies and build the project
 - script: |
     npm install
     npm run build
   displayName: 'npm install and build'
+
+# Step 3: Run linting to analyze code
+- script: npm run lint
+  displayName: 'Run linting'
+
+# Step 4: Run tests
+- script: npm test
+  displayName: 'Run tests'
+
+# Step 5: Save build artifacts
+- task: CopyFiles@2
+  inputs:
+    contents: 'dist/**/*'  # Adjust this path to your build output directory
+    targetFolder: '$(Build.ArtifactStagingDirectory)/dist'
+  displayName: 'Copy build artifacts'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/dist'
+    ArtifactName: 'dist'
+  displayName: 'Publish build artifacts'
